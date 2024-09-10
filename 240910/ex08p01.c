@@ -3,7 +3,6 @@
 #include "unistd.h"
 #include "stdlib.h"
 #include "sys/wait.h"
-#include "math.h"
 
 int main() {
 
@@ -20,14 +19,25 @@ int main() {
     pid = fork();
 
     if (pid > 0) {
-        int result = (int) pow((double) x, (double) y);
+        int result = x;
+
+        for (int i = 1; i < y; i++) {
+            result *= x;
+        }
+
         int child;
 
         wait(&child);
 
         printf("result: %d\n", result + child);
     } else if (pid == 0) {
-        exit((y * (y + 1) / 2) - ((x - 1) * x / 2));
+        int result = 0;
+
+        for (int i = x; i <= y; i++) {
+            result += i;
+        }
+
+        exit(result >> 8);
     } else {
         printf("fail to fork\n");
     }
