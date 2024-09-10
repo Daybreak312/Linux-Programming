@@ -29,7 +29,7 @@ int main() {
 
         wait(&child);
 
-        printf("result: %d\n", result + child);
+        printf("result: %d\n", result + (child >> 8));
     } else if (pid == 0) {
         int result = 0;
 
@@ -37,7 +37,7 @@ int main() {
             result += i;
         }
 
-        exit(result >> 8);
+        exit(result);
     } else {
         printf("fail to fork\n");
     }
