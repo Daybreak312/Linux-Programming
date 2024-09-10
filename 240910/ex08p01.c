@@ -2,6 +2,7 @@
 #include "sys/types.h"
 #include "unistd.h"
 #include "stdlib.h"
+#include "sys/wait.h"
 #include "math.h"
 
 int main() {
@@ -24,6 +25,10 @@ int main() {
 
         wait(&child);
 
-        printf("result: %d", result + child);
+        printf("result: %d\n", result + child);
+    } else if (pid == 0) {
+        exit((y * (y + 1) / 2) - ((x - 1) * x / 2));
+    } else {
+        printf("fail to fork\n");
     }
 }
