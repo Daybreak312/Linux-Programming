@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-extern char **environ
+extern char **envlist;
 
 void main() {
-    while (*environ) {
-        printf("%s\n", *environ++);
+    while (*envlist) {
+        printf("%s\n", *envlist++);
     }
 
 }
