@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 int handled = 0;
 
@@ -24,6 +25,7 @@ int main() {
     sigaction(SIGINT, &act, NULL);
 
     while (!handled) {
+	printf("waiting..\n");
         sleep(1);
     }
 
