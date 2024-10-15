@@ -7,6 +7,7 @@
 int handled = 0;
 
 void handle(int signum) {
+    printf("[parent] signum : %d", signum);
     if (signum == SIGINT) {
         printf("[parent] Got signal.\n");
         handled = 1;
