@@ -36,7 +36,8 @@ int main() {
             sleep(1);
         }
         printf("[child] initializing end\n");
-        kill((int) getpid(), SIGINT);
+        int signalSend = kill((int) getpid(), SIGINT);
+        printf("%d\n", signalSend);
     } else {
         printf("failed to fork.\n");
     }
