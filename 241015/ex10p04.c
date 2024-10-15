@@ -21,7 +21,7 @@ int main() {
     static struct sigaction act;
 
     act.sa_handler = handle;
-    sigfillset(&(act.sa_mask));
+    sigfillset(&(act.sa_mask), SIGINT);
 
     if ((pid = fork()) > 0) {
         printf("[parent] pid: %d\n", (int) getpid());
