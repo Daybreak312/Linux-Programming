@@ -10,6 +10,7 @@ void handle(int signum) {
     if (signum == SIGINT) {
         printf("[parent] Got signal.\n");
     }
+    handled = 1;
 }
 
 int main() {
