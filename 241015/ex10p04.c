@@ -24,7 +24,8 @@ int main() {
         struct sigaction act;
 
         act.sa_handler = handle;
-        sigaddset(&(act.sa_mask), SIGINT);
+        sigfillset(&(act.sa_mask));
+        sigaction(SIGINT, &act, NULL);
 
         while (!handled) {
             sleep(1);
