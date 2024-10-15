@@ -24,6 +24,7 @@ int main() {
     sigfillset(&(act.sa_mask));
 
     if ((pid = fork()) > 0) {
+        printf("[parent] pid: %d\n", (int) getpid());
 
         while (!handled) {
             sleep(1);
@@ -36,6 +37,8 @@ int main() {
             sleep(1);
         }
         printf("[child] initializing end\n");
+
+        printf("[child] ppid: %d\n", (int) getppid());
         int signalSend = kill((int) getppid(), SIGINT);
         printf("%d\n", signalSend);
     } else {
