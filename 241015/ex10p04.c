@@ -18,7 +18,7 @@ int main() {
     pid_t pid;
     int count = 5;
 
-    static struct sigaction act;
+    struct sigaction act;
 
     act.sa_handler = handle;
     sigaddset(&(act.sa_mask), SIGINT);
