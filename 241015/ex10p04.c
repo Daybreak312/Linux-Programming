@@ -18,13 +18,13 @@ int main() {
     pid_t pid;
     int count = 5;
 
-    struct sigaction act;
-
-    act.sa_handler = handle;
-    sigaddset(&(act.sa_mask), SIGINT);
-
     if ((pid = fork()) > 0) {
         printf("[parent] pid: %d\n", (int) getpid());
+
+        struct sigaction act;
+
+        act.sa_handler = handle;
+        sigaddset(&(act.sa_mask), SIGINT);
 
         while (!handled) {
             sleep(1);
