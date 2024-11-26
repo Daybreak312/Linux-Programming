@@ -26,6 +26,8 @@ void logging(char *level, char *message, va_list args);
 
 void getCurrentTimeStr(char buffer[TIME_STR_SIZE]);
 
+void banner();
+
 // info 로그 함수
 void info(char *message, ...) {
     va_list args;
@@ -80,4 +82,18 @@ void getCurrentTimeStr(char buffer[TIME_STR_SIZE]) {
     time_t now = time(NULL);
     struct tm *timeInfo = localtime(&now);
     strftime(buffer, TIME_STR_SIZE, "%Y.%m.%d %H:%M:%S", timeInfo);
+}
+
+void banner() {
+    char banner[] = "  ____  _     __  __ ____  \n |  _ \\| |   |  \\/  / ___| \n | |_) | |   | |\\/| \\___ \\ \n |  __/| |___| |  | |___) |\n |_|   |_____|_|  |_|____/ \n                           \nProcess Lifecycle Management System";
+
+    int fd;
+    if ((fd = open(LOG_FILE, O_RDWR | O_CREAT | O_APPEND, 0777)) < 0) {
+        perror("Failed to open log file");
+        return;
+    }
+    if ((write(fd, banner, strlen(banner))) < 0) {
+        perror("Error writing to log file");
+    }
+    close(fd);
 }
