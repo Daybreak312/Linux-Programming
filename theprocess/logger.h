@@ -85,7 +85,7 @@ void getCurrentTimeStr(char buffer[TIME_STR_SIZE]) {
 }
 
 void banner() {
-    char banner[] = "  ____  _     __  __ ____  \n |  _ \\| |   |  \\/  / ___| \n | |_) | |   | |\\/| \\___ \\ \n |  __/| |___| |  | |___) |\n |_|   |_____|_|  |_|____/ \n                           \nProcess Lifecycle Management System";
+    char banner[] = "\n\n  ____  _     __  __ ____  \n |  _ \\| |   |  \\/  / ___| \n | |_) | |   | |\\/| \\___ \\ \n |  __/| |___| |  | |___) |\n |_|   |_____|_|  |_|____/ \n                           \nProcess Lifecycle Management System";
 
     int fd;
     if ((fd = open(LOG_FILE, O_RDWR | O_CREAT | O_APPEND, 0777)) < 0) {
