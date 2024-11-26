@@ -9,9 +9,10 @@
 #define LOG_FILE "./log/log.txt"
 
 #define TEMP_SIZE 256
-#define LEVEL_ERROR "ERROR"
-#define LEVEL_WARN "WARN"
 #define LEVEL_INFO "INFO"
+#define LEVEL_WARN "WARN"
+#define LEVEL_ERROR "ERROR"
+#define LEVEL_DEBUG "DEBUG"
 
 #define TIME_STR_SIZE 20
 
@@ -21,6 +22,8 @@ void info(char *message, ...);
 void error(char *message, ...);
 
 void warn(char *message, ...);
+
+void debug(char *message, ...);
 
 void logging(char *level, char *message, va_list args);
 
@@ -49,6 +52,14 @@ void warn(char *message, ...) {
     va_list args;
     va_start(args, message);
     logging(LEVEL_WARN, message, args);
+    va_end(args);
+}
+
+// debug 로그 함수
+void debug(char *message, ...) {
+    va_list args;
+    va_start(args, message);
+    logging(LEVEL_DEBUG, message, args);
     va_end(args);
 }
 
