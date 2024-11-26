@@ -180,7 +180,10 @@ void settingSWBlock(char *line) {
 void daemonize() {
     pid_t pid = fork();
     if (pid < 0) exit(EXIT_FAILURE);
-    if (pid > 0) exit(EXIT_SUCCESS);
+    if (pid > 0) {
+        printf("Daemon started. pid: %d", (int) pid);
+        exit(EXIT_SUCCESS);
+    }
     setsid();
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
