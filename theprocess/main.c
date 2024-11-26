@@ -51,10 +51,12 @@ void sigchldHandler(int sig);
 
 // 0.3 프로그램 종료 시그널 핸들러
 void onExit() {
+    signal(SIGCHLD, SIG_DFL);
+
     for (int i = 0; i < blockCount; i++) {
         struct SwInfo *block = &blocks[i];
         debug("Send stop-system signal to process \"%s\" %d", block->name, block->pid);
-        kill(block->pid, SIGNAL_STOP_SYSTEM);
+        kill(block->pid, SIGKILL);
     }
 
     while (wait(NULL) > 0) {}
@@ -138,10 +140,6 @@ void sigchldHandler(int sig) {
     int status;
     pid_t pid;
 
-    if (sig == SIGNAL_STOP_SYSTEM) {
-        return;
-    }
-
     // 비동기 시그널 핸들러에서 모든 자식 프로세스를 확인
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         for (int i = 0; i < blockCount; i++) {
@@ -167,14 +165,14 @@ void daemonize() {
 
     // fork를 두 번 거치며 부모 프로세스와 완전히 독립시켜 데몬화
     pid_t pid = fork();
-    if (pid < 0) exit(EXIT_FAILURE);
-    if (pid > 0) exit(EXIT_SUCCESS);
+    if (pid < 0) _exit(EXIT_FAILURE);
+    if (pid > 0) _exit(EXIT_SUCCESS);
 
-    if (setsid() < 0) exit(EXIT_FAILURE);
+    if (setsid() < 0) _exit(EXIT_FAILURE);
 
     pid = fork();
-    if (pid < 0) exit(EXIT_FAILURE);
-    if (pid > 0) exit(EXIT_SUCCESS);
+    if (pid < 0) _exit(EXIT_FAILURE);
+    if (pid > 0) _exit(EXIT_SUCCESS);
 
     // 표준 File Descriptor와 연결 해제 (부모와 연결 해제)
     close(STDIN_FILENO);
