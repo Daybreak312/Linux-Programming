@@ -310,13 +310,13 @@ void printSWBlocksInfo() {
                            block->name, block->restartCount, time, block->reason);
 
         // S/W 블록 정보 출력
-        debug(buffer);
-        char buffer2[BUFFER_SIZE];
-        snprintf(buffer2, sizeof(buffer2), "%s\n", buffer);
-        if (write(fd, buffer2, len) < 0) {
+        if (write(fd, buffer, len) < 0) {
             close(fd);
             exitErrorMessage("Fail to write on log file.");
         }
+
+        buffer[strlen(buffer) - 1] = '\0';
+        debug(buffer);
     }
 
     if (write(fd, "\n\n", 2) < 0) {
