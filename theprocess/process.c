@@ -1,13 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/wait.h>
 
 int main(int argc, char *argv[]) {
     printf("Process started: %s\n", argv[0]);
 
-    int status;
-    waitpid(getppid(), &status);
+    pid_t parentPid = getppid();
 
-    return 0;
+    while (1) {
+        if (kill(parentPid, 0) == -1) {
+            printf("Parent process (PID: %d) has terminated. Exiting child process.\n", (int) parentPid);
+            exit(EXIT_SUCCESS);
+        }
+        sleep(1);  // 1초마다 부모 상태 확인
+    }
 }
