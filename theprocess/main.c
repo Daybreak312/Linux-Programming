@@ -189,7 +189,7 @@ void initializeProcess(struct SwInfo *block) {
     }
 }
 
-void serializeArguments(char *args[PARAM_SIZE + 2], struct SwInfo *block) {
+void serializeArguments(char *args[MAX_PARAMS + 2], struct SwInfo *block) {
     args[0] = block->name;
     // 매개변수들 삽입
     for (int j = 0; j < block->paramCount; j++) {
