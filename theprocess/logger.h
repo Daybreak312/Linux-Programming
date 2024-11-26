@@ -68,6 +68,7 @@ void logging(char *level, char *message, va_list args) {
 
     vsnprintf(logMessage, TEMP_SIZE, buffer, args);
 
+    printf("%s", buffer);
     if ((write(fd, logMessage, strlen(logMessage))) < 0) {
         perror("Error writing to log file");
     }
