@@ -226,10 +226,10 @@ void initializeProcess(struct SwInfo *block) {
 }
 
 void serializeArguments(char *args[MAX_PARAMS + 2], struct SwInfo *block) {
-    strcpy(args[0], block->name);
+    args[0] = strdup(block->name);
     // 매개변수들 삽입
     for (int j = 0; j < block->paramCount; j++) {
-        strcpy(args[j + 1], block->params[j]);
+        args[j + 1] = strdup(block->params[j]);
     }
     // 마지막 배열값은 NULL이어야 하므로 삽입
     args[block->paramCount + 1] = NULL;
