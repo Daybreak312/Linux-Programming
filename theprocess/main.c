@@ -114,7 +114,7 @@ int main() {
 
     // 프로세스 종료 시, 자식 프로세스 수거를 위한 종료 핸들러 지정
     atexit(onExit);
-    signal(SIGTERM, onExit)
+    signal(SIGTERM, onExit);
 
     // 시그널 기반 자식 프로세스 관리
     signal(SIGCHLD, sigchldHandler);
