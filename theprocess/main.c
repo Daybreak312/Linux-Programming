@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include "logger.h"
+#include "utility.h"
 
 #define MAX_BLOCKS 10
 #define MAX_PARAMS 3
@@ -138,6 +139,8 @@ void sigchldHandler(int sig) {
 }
 
 void daemonize() {
+
+    // fork를 두 번 거치며 부모 프로세스와 완전히 독립시켜 데몬화
     pid_t pid = fork();
     if (pid < 0) exit(EXIT_FAILURE);
     if (pid > 0) exit(EXIT_SUCCESS);
@@ -148,14 +151,18 @@ void daemonize() {
     if (pid < 0) exit(EXIT_FAILURE);
     if (pid > 0) exit(EXIT_SUCCESS);
 
+    // 표준 File Descriptor와 연결 해제 (부모와 연결 해제)
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
 
+    // 새로운 표준 FD들 연결
     int logFd = open("/dev/null", O_RDWR);
     dup2(logFd, STDIN_FILENO);
     dup2(logFd, STDOUT_FILENO);
     dup2(logFd, STDERR_FILENO);
+    // 0, 1, 2는 각각 입력, 출력, 에러 표준 FD. 나머지는 해제해야 함
+    // STDERR_FILENO = 2
     if (logFd > STDERR_FILENO) close(logFd);
 
     char buffer[20];
@@ -163,6 +170,7 @@ void daemonize() {
     info("Daemon started at %s, pid: %d", buffer, (int) getpid());
 }
 
+// S/W 블록 기술서의 전체를 스캔
 void readFileList(const char *fileName) {
     int fd = open(fileName, O_RDONLY);
     if (fd < 0) {
@@ -179,6 +187,7 @@ void readFileList(const char *fileName) {
     }
     buffer[bytesRead] = '\0';
 
+    // 각 줄 단위로 순환하며 settingSWBlock 호출
     char *status = NULL;
     char *line = strtok_r(buffer, "\n", &status);
     while (line && blockCount < MAX_BLOCKS) {
@@ -186,16 +195,21 @@ void readFileList(const char *fileName) {
         settingSWBlock(line);
         line = strtok_r(NULL, "\n", &status);
     }
+
     close(fd);
 }
 
+// S/W 블록 기술서를 줄 단위로 스캔
 void settingSWBlock(char *line) {
     struct SwInfo *block = &blocks[blockCount++];
+
     char *status = NULL;
     char *token = strtok_r(line, ";", &status);
+    trim(token);
+
     strncpy(block->name, token, NAME_SIZE - 1);
 
-    // i 변수를 반복문 외부에서 사용해야 하므로, for문보다 while문 코드가 더 예쁨
+    // i 변수를 반복문 외부에서 사용 해야 해서 for문 구현보다 while문 코드가 더 예쁨. 건들지 말 것
     int i = 0;
     while ((token = strtok_r(NULL, ";", &status)) != NULL && i < MAX_PARAMS) {
         strncpy(block->params[i++], token, PARAM_SIZE - 1);
@@ -205,6 +219,7 @@ void settingSWBlock(char *line) {
     strcpy(block->reason, "Init");
 }
 
+// 전체 S/W 블록 초기화
 void initializeProcesses() {
 
     for (int i = 0; i < blockCount; i++) {
@@ -212,6 +227,7 @@ void initializeProcesses() {
     }
 }
 
+// 단일 S/W 블록 초기화
 void initializeProcess(struct SwInfo *block) {
     block->startTime = time(NULL);
 
@@ -237,7 +253,9 @@ void initializeProcess(struct SwInfo *block) {
     exit(EXIT_FAILURE);
 }
 
+// S/W 블록 정보를 execv() 호출을 위한 배열로 직렬화
 void serializeArguments(char *args[MAX_PARAMS + 2], struct SwInfo *block) {
+    // 프로그램 이름 삽입
     args[0] = strdup(block->name);
     // 매개변수들 삽입
     for (int j = 0; j < block->paramCount; j++) {
@@ -258,6 +276,7 @@ void restartProcess(struct SwInfo *block, char *reasonStr) {
     initializeProcess(block);
 }
 
+// log.txt와 restart.txt 모두에 출력됨
 void printSWBlocksInfo() {
     // 쓰기 전용, 파일이 없을 경우 생성, 이어 쓰기, rw--w--w- 권한
     int fd = open("./log/restart.txt", O_WRONLY | O_CREAT | O_APPEND, 0644);
@@ -265,13 +284,14 @@ void printSWBlocksInfo() {
         exitErrorMessage("Fail to open log file.");
     }
 
-    // 로그
+    // 출력 시작을 알리는 로그
     info("print S/W Blocks information.");
 
     char buffer[BUFFER_SIZE];
     char time[TIME_STR_SIZE];
     getCurrentTimeStr(time);
 
+    // 각 Column의 제목들 출력
     info("S/W Block Name   Restart Count   Start Time            Reason");
     snprintf(buffer, BUFFER_SIZE, "%s\nS/W Block Name   Restart Count   Start Time            Reason\n",
              time);
@@ -287,9 +307,8 @@ void printSWBlocksInfo() {
         int len = snprintf(buffer, sizeof(buffer), "%-16s %-15d %-21s %s\n",
                            block->name, block->restartCount, time, block->reason);
 
-        // 로그로 출력
+        // S/W 블록 정보 출력
         info(buffer);
-        // 파일로 출력
         if (write(fd, buffer, len) < 0) {
             close(fd);
             exitErrorMessage("Fail to write on log file.");
