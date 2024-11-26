@@ -17,6 +17,7 @@
 #define BUFFER_SIZE 1024
 
 #define DEFAULT_PROCESS_FILE "./process"
+#define SWBLOCKS_INFO_FILE "./swblocks.txt"
 
 struct SwInfo {
     char name[NAME_SIZE];
@@ -100,7 +101,7 @@ int main() {
     daemonize();
 
     // S/W 블록들을 읽어들임
-    readFileList("swblocks.txt");
+    readFileList(SWBLOCKS_INFO_FILE);
 
     // 프로세스들 초기화
     initializeProcesses();
@@ -220,7 +221,6 @@ void initializeProcess(struct SwInfo *block) {
     // fork()가 정상 실행되지 않음
     error("Fail to execute process(s/w block): %s", block->name);
     exit(EXIT_FAILURE);
-
 }
 
 void serializeArguments(char *args[MAX_PARAMS + 2], struct SwInfo *block) {
