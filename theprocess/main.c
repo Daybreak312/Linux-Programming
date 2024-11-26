@@ -187,8 +187,6 @@ void daemonize() {
         exit(EXIT_SUCCESS);
     }
     setsid();
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
     close(STDERR_FILENO);
 
     char buffer[20];
