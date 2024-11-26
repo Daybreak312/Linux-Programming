@@ -186,8 +186,22 @@ void daemonize() {
         printf("Daemon started. pid: %d\n", (int) pid);
         exit(EXIT_SUCCESS);
     }
-    setsid();
+
+    if (setsid() < 0) exit(EXIT_FAILURE);
+
+    pid = fork();
+    if (pid < 0) exit(EXIT_FAILURE);
+    if (pid > 0) exit(EXIT_SUCCESS);
+
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
     close(STDERR_FILENO);
+
+    int logFd = open("/dev/null", O_RDWR);
+    dup2(logFd, STDIN_FILENO);
+    dup2(logFd, STDOUT_FILENO);
+    dup2(logFd, STDERR_FILENO);
+    if (logFd > 2) close(logFd);
 
     char buffer[20];
     getCurrentTimeStr(buffer);
