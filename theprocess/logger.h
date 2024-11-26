@@ -3,7 +3,7 @@
 #include "string.h"
 #include "stdarg.h"
 
-#define BUFFER_SIZE 256
+#define TEMP_SIZE 256
 #define LEVEL_ERROR "ERROR"
 #define LEVEL_WARN "WARN"
 #define LEVEL_INFO "INFO"
@@ -40,13 +40,13 @@ void warn(char *message, ...) {
 
 // 로그를 출력하는 함수
 void logging(char *level, char *message, va_list args) {
-    char buffer[BUFFER_SIZE];
+    char buffer[TEMP_SIZE];
     // 로그 수준과 메시지를 결합하여 포맷
     snprintf(buffer, sizeof(buffer), "%s :: %s", level, message);
 
     // ERROR 로그의 경우 perror 사용
     if (strcmp(level, LEVEL_ERROR) == 0) {
-        char buffer2[BUFFER_SIZE];
+        char buffer2[TEMP_SIZE];
         vsnprintf(buffer2, sizeof(buffer2), buffer, args);
         perror(buffer2);
     } else {

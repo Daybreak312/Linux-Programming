@@ -14,7 +14,9 @@
 #define NAME_SIZE 50
 #define PARAM_SIZE 256
 #define REASON_SIZE 256
+
 #define BUFFER_SIZE 1024
+#define TIME_STR_SIZE 20
 
 #define DEFAULT_PROCESS_FILE "./process"
 
@@ -251,8 +253,8 @@ void printSWBlocksInfo() {
     close(fd);
 }
 
-void getCurrentTimeStr(char buffer[20]) {
+void getCurrentTimeStr(char buffer[TIME_STR_SIZE]) {
     time_t now = time(NULL);
     struct tm *timeInfo = localtime(&now);
-    strftime(buffer, sizeof(buffer), "%Y.%m.%d %H:%M:%S", timeInfo);
+    strftime(buffer, TIME_STR_SIZE, "%Y.%m.%d %H:%M:%S", timeInfo);
 }
