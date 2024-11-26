@@ -38,7 +38,7 @@ int blockCount = 0;
 void createLogDirectory() {
     struct stat st = {0};
     if (stat("./log", &st) == -1) {  // 'log' 디렉터리 존재 확인
-        mkdir("./log", 0666); // 존재하지 않으면 생성
+        mkdir("./log", 0777); // 존재하지 않으면 생성
     }
 }
 
@@ -90,7 +90,7 @@ void exitError() {
 // 메인 함수
 int main() {
 
-    printf("Program started. pid: %d", getpid());
+    printf("Program started. pid: %d\n", getpid());
 
     // 시그널 기반 자식 프로세스 관리
     signal(SIGCHLD, sigchldHandler);

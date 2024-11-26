@@ -59,7 +59,7 @@ void logging(char *level, char *message, va_list args) {
     snprintf(buffer, TEMP_SIZE, "%s :: %s - %s\n", level, time, message);
 
     int fd;
-    if ((fd = open(LOG_FILE, O_WRONLY | O_CREAT | O_APPEND, 0666)) < 0) {
+    if ((fd = open(LOG_FILE, O_RDWR | O_CREAT | O_APPEND, 0777)) < 0) {
         perror("Failed to open log file");
         return;
     }
