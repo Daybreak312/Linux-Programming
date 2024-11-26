@@ -12,6 +12,6 @@ int main(int argc, char *argv[]) {
             printf("Parent process (PID: %d) has terminated. Exiting child process.\n", (int) parentPid);
             exit(EXIT_SUCCESS);
         }
-        sleep(1);  // 1초마다 부모 상태 확인
+        sleep(10);
     }
 }
