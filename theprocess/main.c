@@ -20,6 +20,8 @@
 #define DEFAULT_PROCESS_FILE "./process.out"
 #define SWBLOCKS_INFO_FILE "./swblocks.txt"
 
+#define SIGNAL_STOP_SYSTEM 113
+
 struct SwInfo {
     char name[NAME_SIZE];
     int pid;
@@ -46,6 +48,20 @@ void createLogDirectory() {
 
 // 0.2 자식 프로세스 종료 시그널 핸들러
 void sigchldHandler(int sig);
+
+// 0.3 프로그램 종료 시그널 핸들러
+void onExit() {
+    for (int i = 0; i < blockCount; i++) {
+        struct SwInfo *block = &blocks[i];
+        debug("Send stop-system signal to process \"%s\" %d", block->name, block->pid);
+        kill(block->pid, SIGNAL_STOP_SYSTEM);
+    }
+
+    while (wait(NULL) > 0) {}
+    info("All process was stopped.");
+
+    _exit(EXIT_SUCCESS);
+}
 
 // 1. S/W 블록 읽기 관련 함수들
 // 1.1 텍스트 파일 읽기
@@ -94,6 +110,9 @@ int main() {
 
     banner();
 
+    // 프로세스 종료 시, 자식 프로세스 수거를 위한 종료 핸들러 지정
+    atexit(onExit);
+
     // 시그널 기반 자식 프로세스 관리
     signal(SIGCHLD, sigchldHandler);
 
@@ -118,6 +137,10 @@ int main() {
 void sigchldHandler(int sig) {
     int status;
     pid_t pid;
+
+    if (sig == SIGNAL_STOP_SYSTEM) {
+        return;
+    }
 
     // 비동기 시그널 핸들러에서 모든 자식 프로세스를 확인
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {

@@ -1,11 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 int main(int argc, char *argv[]) {
     printf("Process started: %s\n", argv[0]);
 
-    while (1) {
-        sleep(5);  // 실행 유지
-    }
+    int status;
+    waitpid(getppid(), &status);
+
     return 0;
 }
