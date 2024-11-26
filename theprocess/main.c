@@ -153,7 +153,7 @@ void readFileList(const char *fileName) {
     }
     buffer[bytesRead] = '\0';
 
-    char **status;
+    char **status = NULL;
     char *line = strtok_r(buffer, "\n", status);
     while (line && blockCount < MAX_BLOCKS) {
         info("Reading line: %s", line);
@@ -165,7 +165,7 @@ void readFileList(const char *fileName) {
 
 void settingSWBlock(char *line) {
     struct SwInfo *block = &blocks[blockCount++];
-    char **status;
+    char **status = NULL;
     char *token = strtok_r(line, ";", status);
     strncpy(block->name, token, NAME_SIZE - 1);
 
