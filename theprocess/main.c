@@ -211,9 +211,11 @@ void initializeProcess(struct SwInfo *block) {
         serializeArguments(args, block);
 
         execv(DEFAULT_PROCESS_FILE, args);
+        perror("execv failed");
+        exit(EXIT_FAILURE);
     } else if (pid > 0) {
-        info("Starting process \"%s\", pid: %d", block->name, block->pid);
         block->pid = pid;
+        info("Starting process \"%s\", pid: %d", block->name, block->pid);
         return;
     }
 
