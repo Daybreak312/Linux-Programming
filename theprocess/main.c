@@ -193,7 +193,7 @@ void readFileList(const char *fileName) {
     char *status = NULL;
     char *line = strtok_r(buffer, "\n", &status);
     while (line && blockCount < MAX_BLOCKS) {
-        info("Reading line: %s", line);
+        debug("Reading line: %s", line);
         settingSWBlock(line);
         line = strtok_r(NULL, "\n", &status);
     }
@@ -272,7 +272,7 @@ void restartProcess(struct SwInfo *block, char *reasonStr) {
     strncpy(block->reason, reasonStr, REASON_SIZE - 1);
     block->reason[REASON_SIZE - 1] = '\0';
 
-    info("Process \"%s\" was restarted. pid: %d", block->name, block->pid);
+    info("Process \"%s\":%d was restarted.", block->name, block->pid);
 
     printSWBlocksInfo();
     initializeProcess(block);
@@ -287,14 +287,14 @@ void printSWBlocksInfo() {
     }
 
     // 출력 시작을 알리는 로그
-    info("print S/W Blocks information.");
+    debug("print S/W Blocks information.");
 
     char buffer[BUFFER_SIZE];
     char time[TIME_STR_SIZE];
     getCurrentTimeStr(time);
 
     // 각 Column의 제목들 출력
-    info("S/W Block Name   Restart Count   Start Time            Reason");
+    debug("S/W Block Name   Restart Count   Start Time            Reason");
     snprintf(buffer, BUFFER_SIZE, "%s\nS/W Block Name   Restart Count   Start Time            Reason\n",
              time);
     if (write(fd, buffer, strlen(buffer)) < 0) {
@@ -306,12 +306,14 @@ void printSWBlocksInfo() {
         struct SwInfo *block = &blocks[i];
 
         // S/W 블록 정보를 버퍼에 작성
-        int len = snprintf(buffer, sizeof(buffer), "%-16s %-15d %-21s %s\n",
+        int len = snprintf(buffer, sizeof(buffer), "%-16s %-15d %-21s %s",
                            block->name, block->restartCount, time, block->reason);
 
         // S/W 블록 정보 출력
-        info(buffer);
-        if (write(fd, buffer, len) < 0) {
+        debug(buffer);
+        char buffer2[BUFFER_SIZE];
+        snprintf(buffer2, sizeof(buffer2), "%s\n", buffer);
+        if (write(fd, buffer2, len) < 0) {
             close(fd);
             exitErrorMessage("Fail to write on log file.");
         }
