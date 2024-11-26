@@ -22,6 +22,7 @@
 
 struct SwInfo {
     char name[NAME_SIZE];
+    int pid;
     char params[MAX_PARAMS][PARAM_SIZE];
     int paramCount;
     int restartCount;
@@ -39,9 +40,12 @@ int blockCount = 0;
 void createLogDirectory() {
     struct stat st = {0};
     if (stat("./log", &st) == -1) {  // 'log' 디렉터리 존재 확인
-        mkdir("./log", 0700); // 존재하지 않으면 생성
+        mkdir("./log", 0644); // 존재하지 않으면 생성
     }
 }
+
+// 0.2 자식 프로세스 종료 시그널 핸들러
+void sigchldHandler(int sig);
 
 // 1. S/W 블록 읽기 관련 함수들
 // 1.1 텍스트 파일 읽기
@@ -91,6 +95,9 @@ void exitError() {
 // 메인 함수
 int main() {
 
+    // 시그널 기반 자식 프로세스 관리
+    signal(SIGCHLD, sigchldHandler);
+
     // 로그 파일을 저장할 디렉토리 생성
     createLogDirectory();
 
@@ -103,9 +110,34 @@ int main() {
     // 프로세스들 초기화
     initializeProcesses();
 
-    // 데모닝
+    // 계속 실행
     while (1) {
         sleep(10);
+    }
+}
+
+void sigchldHandler(int sig) {
+    int status;
+    pid_t pid;
+
+    // 비동기 시그널 핸들러에서 모든 자식 프로세스를 확인
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+        for (int i = 0; i < blockCount; i++) {
+            if (blocks[i].pid == pid) {  // 종료된 자식 프로세스 확인
+                char buffer[BUFFER_SIZE];
+
+                if (WIFEXITED(status)) {
+                    sprintf(buffer, "Exit(%d)", WEXITSTATUS(status));
+                } else if (WIFSIGNALED(status)) {
+                    sprintf(buffer, "Signal(%d, %s)", WTERMSIG(status), strsignal(WTERMSIG(status)));
+                } else {
+                    sprintf(buffer, "Unknown(%d)", status);
+                }
+
+                restartProcess(&blocks[i], buffer); // 재시작 처리
+                break;
+            }
+        }
     }
 }
 
@@ -180,58 +212,47 @@ void initializeProcess(struct SwInfo *block) {
         serializeArguments(args, block);
 
         execv(DEFAULT_PROCESS_FILE, args);
-
-        error("Fail to execute process(s/w block): %s", block->name);
-        exit(EXIT_FAILURE);
-        // exec 계열 함수가 호출 프로세스를 대체하지 못했으므로 실행 실패
     } else if (pid > 0) {
-        monitorProcess(block, pid);
+        block->pid = pid;
+        return;
     }
+
+    // exec 계열 함수가 호출 프로세스를 대체하지 못했거나,
+    // fork()가 정상 실행되지 않음
+    error("Fail to execute process(s/w block): %s", block->name);
+    exit(EXIT_FAILURE);
+
 }
 
 void serializeArguments(char *args[MAX_PARAMS + 2], struct SwInfo *block) {
-    args[0] = block->name;
+    strcpy(args[0], block->name);
     // 매개변수들 삽입
     for (int j = 0; j < block->paramCount; j++) {
-        args[j + 1] = block->params[j];
+        strcpy(args[j + 1], block->params[j]);
     }
     // 마지막 배열값은 NULL이어야 하므로 삽입
     args[block->paramCount + 1] = NULL;
-}
-
-void monitorProcess(struct SwInfo *block, pid_t pid) {
-    int status;
-    waitpid(pid, &status, 0);
-    char buffer[BUFFER_SIZE];
-    if (WIFEXITED(status)) {
-        sprintf(buffer, "Exit(%d)", WEXITSTATUS(status));
-        restartProcess(block, buffer);
-    } else if (WIFSIGNALED(status)) {
-        sprintf(buffer, "Signal(%d, %s)", WTERMSIG(status), strsignal(WTERMSIG(status)));
-        restartProcess(block, buffer);
-    } else if (WIFSTOPPED(status)) {
-        error("Process \"%s\" was stopped by Unknown reason with status: %d",
-              block->name, WSTOPSIG(status));
-        sprintf(buffer, "Unknown(%d)", WEXITSTATUS(status));
-        restartProcess(block, buffer);
-    }
 }
 
 void restartProcess(struct SwInfo *block, char *reasonStr) {
     block->restartCount++;
     strncpy(block->reason, reasonStr, REASON_SIZE - 1);
     block->reason[REASON_SIZE - 1] = '\0';
+
+    info("Process \"%s\" was restarted.", block->name);
+
     printSWBlocksInfo();
     initializeProcess(block);
 }
 
 void printSWBlocksInfo() {
-    // 쓰기 전용, 파일이 없을 경우 생성, 덮어 쓰기, rw--w--w- 권한
-    int fd = open("./log/restart.txt", O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    // 쓰기 전용, 파일이 없을 경우 생성, 이어 쓰기, rw--w--w- 권한
+    int fd = open("./log/restart.txt", O_WRONLY | O_CREAT | O_APPEND, 0644);
     if (fd < 0) {
         exitErrorMessage("Fail to open log file.");
     }
 
+    info("print S/W Blocks information.");
     char buffer[BUFFER_SIZE];
     for (int i = 0; i < blockCount; i++) {
         struct SwInfo *block = &blocks[i];
@@ -247,6 +268,10 @@ void printSWBlocksInfo() {
             close(fd);
             exitErrorMessage("Fail to write on log file.");
         }
+    }
+
+    if (write(fd, "\n\n", 2) < 0) {
+        exitErrorMessage("Fail to write on log file.");
     }
 
     // 파일 닫기

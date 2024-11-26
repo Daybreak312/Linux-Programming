@@ -2,6 +2,10 @@
 #include "stdlib.h"
 #include "string.h"
 #include "stdarg.h"
+#include "unistd.h"
+#include "fcntl.h"
+
+#define LOG_FILE "./log/log.txt"
 
 #define TEMP_SIZE 256
 #define LEVEL_ERROR "ERROR"
@@ -10,8 +14,11 @@
 
 // 로그 함수들 선언
 void info(char *message, ...);
+
 void error(char *message, ...);
+
 void warn(char *message, ...);
+
 void logging(char *level, char *message, va_list args);
 
 // info 로그 함수
@@ -42,15 +49,21 @@ void warn(char *message, ...) {
 void logging(char *level, char *message, va_list args) {
     char buffer[TEMP_SIZE];
     // 로그 수준과 메시지를 결합하여 포맷
-    snprintf(buffer, sizeof(buffer), "%s :: %s", level, message);
+    snprintf(buffer, TEMP_SIZE, "%s :: %s\n", level, message);
 
-    // ERROR 로그의 경우 perror 사용
-    if (strcmp(level, LEVEL_ERROR) == 0) {
-        char buffer2[TEMP_SIZE];
-        vsnprintf(buffer2, sizeof(buffer2), buffer, args);
-        perror(buffer2);
-    } else {
-        // INFO 및 WARN 로그의 경우 vprintf 사용
-        vprintf(buffer, args);
+    int fd;
+    if ((fd = open(LOG_FILE, O_WRONLY | O_CREAT | O_APPEND, 0644)) < 0) {
+        perror("Failed to open log file");
+        return;
     }
+
+    char logMessage[TEMP_SIZE];
+
+    vsnprintf(logMessage, TEMP_SIZE, buffer, args);
+
+    if ((write(fd, logMessage, strlen(logMessage))) < 0) {
+        perror("Error writing to log file");
+    }
+
+    close(fd);
 }
