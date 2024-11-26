@@ -137,48 +137,6 @@ void sigchldHandler(int sig) {
     }
 }
 
-void readFileList(const char *fileName) {
-    int fd = open(fileName, O_RDONLY);
-    if (fd < 0) {
-        exitErrorMessage("Fail to open file.");
-    }
-
-    // 파일 크기가 BUFFER_SIZE = 1024보다 작을 것이라 가정
-    char buffer[BUFFER_SIZE];
-    ssize_t bytesRead = read(fd, buffer, sizeof(buffer) - 1);
-
-    if (bytesRead < 0) {
-        close(fd);
-        exitErrorMessage("Fail to read file.");
-    }
-    buffer[bytesRead] = '\0';
-
-    char **status = NULL;
-    char *line = strtok_r(buffer, "\n", status);
-    while (line && blockCount < MAX_BLOCKS) {
-        info("Reading line: %s", line);
-        settingSWBlock(line);
-        line = strtok_r(NULL, "\n", status);
-    }
-    close(fd);
-}
-
-void settingSWBlock(char *line) {
-    struct SwInfo *block = &blocks[blockCount++];
-    char **status = NULL;
-    char *token = strtok_r(line, ";", status);
-    strncpy(block->name, token, NAME_SIZE - 1);
-
-    // i 변수를 반복문 외부에서 사용해야 하므로, for문보다 while문 코드가 더 예쁨
-    int i = 0;
-    while ((token = strtok_r(NULL, ";", status)) != NULL && i < MAX_PARAMS) {
-        strncpy(block->params[i++], token, PARAM_SIZE - 1);
-    }
-    block->paramCount = i;
-    block->restartCount = 0;
-    block->reason[0] = '\0';
-}
-
 void daemonize() {
     pid_t pid = fork();
     if (pid < 0) exit(EXIT_FAILURE);
@@ -198,11 +156,53 @@ void daemonize() {
     dup2(logFd, STDIN_FILENO);
     dup2(logFd, STDOUT_FILENO);
     dup2(logFd, STDERR_FILENO);
-    if (logFd > 2) close(logFd);
+    if (logFd > STDERR_FILENO) close(logFd);
 
     char buffer[20];
     getCurrentTimeStr(buffer);
     info("Daemon started at %s, pid: %d", buffer, (int) getpid());
+}
+
+void readFileList(const char *fileName) {
+    int fd = open(fileName, O_RDONLY);
+    if (fd < 0) {
+        exitErrorMessage("Fail to open file.");
+    }
+
+    // 파일 크기가 BUFFER_SIZE = 1024보다 작을 것이라 가정
+    char buffer[BUFFER_SIZE];
+    ssize_t bytesRead = read(fd, buffer, sizeof(buffer) - 1);
+
+    if (bytesRead < 0) {
+        close(fd);
+        exitErrorMessage("Fail to read file.");
+    }
+    buffer[bytesRead] = '\0';
+
+    char *status = NULL;
+    char *line = strtok_r(buffer, "\n", &status);
+    while (line && blockCount < MAX_BLOCKS) {
+        info("Reading line: %s", line);
+        settingSWBlock(line);
+        line = strtok_r(NULL, "\n", &status);
+    }
+    close(fd);
+}
+
+void settingSWBlock(char *line) {
+    struct SwInfo *block = &blocks[blockCount++];
+    char *status = NULL;
+    char *token = strtok_r(line, ";", &status);
+    strncpy(block->name, token, NAME_SIZE - 1);
+
+    // i 변수를 반복문 외부에서 사용해야 하므로, for문보다 while문 코드가 더 예쁨
+    int i = 0;
+    while ((token = strtok_r(NULL, ";", &status)) != NULL && i < MAX_PARAMS) {
+        strncpy(block->params[i++], token, PARAM_SIZE - 1);
+    }
+    block->paramCount = i;
+    block->restartCount = 0;
+    block->reason[0] = '\0';
 }
 
 void initializeProcesses() {
