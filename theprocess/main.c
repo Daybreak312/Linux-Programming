@@ -56,7 +56,7 @@ void onExit() {
     for (int i = 0; i < blockCount; i++) {
         struct SwInfo *block = &blocks[i];
         debug("Send stop-system signal to process \"%s\" %d", block->name, block->pid);
-        kill(block->pid, SIGKILL);
+        kill(block->pid, SIGTERM);
     }
 
     while (wait(NULL) > 0) {}
