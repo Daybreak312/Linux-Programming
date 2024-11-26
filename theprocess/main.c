@@ -108,7 +108,7 @@ int main() {
 
     // 계속 실행
     while (1) {
-        sleep(10);
+        sleep(1);
     }
 }
 
@@ -182,10 +182,7 @@ void settingSWBlock(char *line) {
 void daemonize() {
     pid_t pid = fork();
     if (pid < 0) exit(EXIT_FAILURE);
-    if (pid > 0) {
-        printf("Daemon started. pid: %d\n", (int) pid);
-        exit(EXIT_SUCCESS);
-    }
+    if (pid > 0) exit(EXIT_SUCCESS);
 
     if (setsid() < 0) exit(EXIT_FAILURE);
 
