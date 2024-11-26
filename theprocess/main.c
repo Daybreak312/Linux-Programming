@@ -272,8 +272,8 @@ void printSWBlocksInfo() {
     char time[TIME_STR_SIZE];
     getCurrentTimeStr(time);
 
-    info("S/W Block Name  Restart Count   Start Time               Reason");
-    snprintf(buffer, BUFFER_SIZE, "%s\nS/W Block Name   Restart Count   Start Time               Reason\n",
+    info("S/W Block Name   Restart Count   Start Time                Reason");
+    snprintf(buffer, BUFFER_SIZE, "%s\nS/W Block Name   Restart Count   Start Time                Reason\n",
              time);
     if (write(fd, buffer, strlen(buffer)) < 0) {
         close(fd);
