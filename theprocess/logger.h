@@ -18,7 +18,7 @@ void log(char *level, char *message, va_list args);
 void info(char *message, ...) {
     va_list args;
     va_start(args, message);
-    log(LEVEL_INFO, message, args);
+    logging(LEVEL_INFO, message, args);
     va_end(args);
 }
 
@@ -26,7 +26,7 @@ void info(char *message, ...) {
 void error(char *message, ...) {
     va_list args;
     va_start(args, message);
-    log(LEVEL_ERROR, message, args);
+    logging(LEVEL_ERROR, message, args);
     va_end(args);
 }
 
@@ -34,12 +34,12 @@ void error(char *message, ...) {
 void warn(char *message, ...) {
     va_list args;
     va_start(args, message);
-    log(LEVEL_WARN, message, args);
+    logging(LEVEL_WARN, message, args);
     va_end(args);
 }
 
 // 로그를 출력하는 함수
-void log(char *level, char *message, va_list args) {
+void logging(char *level, char *message, va_list args) {
     char buffer[BUFFER_SIZE];
     // 로그 수준과 메시지를 결합하여 포맷
     snprintf(buffer, sizeof(buffer), "%s :: %s", level, message);
