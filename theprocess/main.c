@@ -211,6 +211,7 @@ void initializeProcess(struct SwInfo *block) {
 
         execv(DEFAULT_PROCESS_FILE, args);
     } else if (pid > 0) {
+        info("Starting process \"%s\", pid: %d", block->name, block->pid);
         block->pid = pid;
         return;
     }
@@ -237,7 +238,7 @@ void restartProcess(struct SwInfo *block, char *reasonStr) {
     strncpy(block->reason, reasonStr, REASON_SIZE - 1);
     block->reason[REASON_SIZE - 1] = '\0';
 
-    info("Process \"%s\" was restarted.", block->name);
+    info("Process \"%s\" was restarted. pid: %d", block->name, block->pid);
 
     printSWBlocksInfo();
     initializeProcess(block);
@@ -250,6 +251,7 @@ void printSWBlocksInfo() {
         exitErrorMessage("Fail to open log file.");
     }
 
+    // 로그
     info("print S/W Blocks information.");
     char buffer[BUFFER_SIZE];
     for (int i = 0; i < blockCount; i++) {
@@ -257,11 +259,13 @@ void printSWBlocksInfo() {
         char time[30];
         getCurrentTimeStr(time);
 
-        // 로그 내용을 버퍼에 작성
+        // S/W 블록 정보를 버퍼에 작성
         int len = snprintf(buffer, sizeof(buffer), "%-15s %-15d %-25s %s\n",
                            block->name, block->restartCount, time, block->reason);
 
-        // 버퍼 내용을 파일에 쓰기
+        // 로그로 출력
+        info(buffer);
+        // 파일로 출력
         if (write(fd, buffer, len) < 0) {
             close(fd);
             exitErrorMessage("Fail to write on log file.");
