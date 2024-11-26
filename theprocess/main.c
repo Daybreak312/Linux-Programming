@@ -191,7 +191,7 @@ void daemonize() {
 
     char buffer[20];
     getCurrentTimeStr(buffer);
-    info("Daemon started at %s", buffer);
+    info("Daemon started at %s, pid: %d", buffer, (int) getpid());
 }
 
 void initializeProcesses() {
