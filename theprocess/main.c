@@ -202,7 +202,7 @@ void settingSWBlock(char *line) {
     }
     block->paramCount = i;
     block->restartCount = 0;
-    block->reason[0] = '\0';
+    strcpy(block->reason, "Init");
 }
 
 void initializeProcesses() {
