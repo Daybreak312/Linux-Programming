@@ -56,7 +56,7 @@ void logging(char *level, char *message, va_list args) {
     char time[TIME_STR_SIZE];
     getCurrentTimeStr(time);
     // 로그 수준과 메시지를 결합하여 포맷
-    snprintf(buffer, TEMP_SIZE, "%-5s :: %s - %s\n", level, time, message);
+    snprintf(buffer, TEMP_SIZE, "%s :: %-5s - %s\n", time, level, message);
 
     int fd;
     if ((fd = open(LOG_FILE, O_RDWR | O_CREAT | O_APPEND, 0777)) < 0) {
