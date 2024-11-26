@@ -267,6 +267,14 @@ void printSWBlocksInfo() {
 
     // 로그
     info("print S/W Blocks information.");
+
+    info("S/W Block Name   Restart Count   Start Time               Reason");
+    if (write(fd, "S/W Block Name   Restart Count   Start Time               Reason\n",
+              66) < 0) {
+        close(fd);
+        exitErrorMessage("Fail to write on log file.");
+    }
+
     char buffer[BUFFER_SIZE];
     for (int i = 0; i < blockCount; i++) {
         struct SwInfo *block = &blocks[i];
@@ -274,7 +282,7 @@ void printSWBlocksInfo() {
         getCurrentTimeStr(time);
 
         // S/W 블록 정보를 버퍼에 작성
-        int len = snprintf(buffer, sizeof(buffer), "%-15s %-15d %-25s %s\n",
+        int len = snprintf(buffer, sizeof(buffer), "%-17s %-16d %-25s %s\n",
                            block->name, block->restartCount, time, block->reason);
 
         // 로그로 출력
