@@ -90,6 +90,8 @@ void exitError() {
 // 메인 함수
 int main() {
 
+    printf("Program started. pid: %d", getpid());
+
     // 시그널 기반 자식 프로세스 관리
     signal(SIGCHLD, sigchldHandler);
 
