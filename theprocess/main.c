@@ -98,7 +98,7 @@ int main() {
     createLogDirectory();
 
     // 현재 프로세스를 데몬으로 전환
-    // daemonize();
+    daemonize();
 
     // S/W 블록들을 읽어들임
     readFileList(SWBLOCKS_INFO_FILE);
