@@ -90,8 +90,6 @@ void exitError() {
 // 메인 함수
 int main() {
 
-    printf("Program started. pid: %d\n", getpid());
-
     // 시그널 기반 자식 프로세스 관리
     signal(SIGCHLD, sigchldHandler);
 
@@ -181,7 +179,7 @@ void daemonize() {
     pid_t pid = fork();
     if (pid < 0) exit(EXIT_FAILURE);
     if (pid > 0) {
-        printf("Daemon started. pid: %d", (int) pid);
+        printf("Daemon started. pid: %d\n", (int) pid);
         exit(EXIT_SUCCESS);
     }
     setsid();
