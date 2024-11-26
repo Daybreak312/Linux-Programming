@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -16,7 +15,6 @@
 #define REASON_SIZE 256
 
 #define BUFFER_SIZE 1024
-#define TIME_STR_SIZE 20
 
 #define DEFAULT_PROCESS_FILE "./process"
 
@@ -76,9 +74,6 @@ void monitorProcess(struct SwInfo *block, pid_t pid);
 // 6. 유틸리티 함수들
 // 6.1 데몬 전환
 void daemonize();
-
-// 6.2 현재 시간을 yyyy.MM.dd. hh.mm.ss 형식으로 제공
-void getCurrentTimeStr(char buffer[20]);
 
 // 7. 에러 관련 함수들
 // 7.1 에러 메세지를 출력하고 상태 '1'로 종료
@@ -276,10 +271,4 @@ void printSWBlocksInfo() {
 
     // 파일 닫기
     close(fd);
-}
-
-void getCurrentTimeStr(char buffer[TIME_STR_SIZE]) {
-    time_t now = time(NULL);
-    struct tm *timeInfo = localtime(&now);
-    strftime(buffer, TIME_STR_SIZE, "%Y.%m.%d %H:%M:%S", timeInfo);
 }

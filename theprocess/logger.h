@@ -4,6 +4,7 @@
 #include "stdarg.h"
 #include "unistd.h"
 #include "fcntl.h"
+#include "time.h"
 
 #define LOG_FILE "./log/log.txt"
 
@@ -11,6 +12,8 @@
 #define LEVEL_ERROR "ERROR"
 #define LEVEL_WARN "WARN"
 #define LEVEL_INFO "INFO"
+
+#define TIME_STR_SIZE 20
 
 // 로그 함수들 선언
 void info(char *message, ...);
@@ -20,6 +23,8 @@ void error(char *message, ...);
 void warn(char *message, ...);
 
 void logging(char *level, char *message, va_list args);
+
+void getCurrentTimeStr(char buffer[TIME_STR_SIZE]);
 
 // info 로그 함수
 void info(char *message, ...) {
@@ -48,8 +53,10 @@ void warn(char *message, ...) {
 // 로그를 출력하는 함수
 void logging(char *level, char *message, va_list args) {
     char buffer[TEMP_SIZE];
+    char time[TIME_STR_SIZE];
+    getCurrentTimeStr(time);
     // 로그 수준과 메시지를 결합하여 포맷
-    snprintf(buffer, TEMP_SIZE, "%s :: %s\n", level, message);
+    snprintf(buffer, TEMP_SIZE, "%s :: %s - %s\n", level, time, message);
 
     int fd;
     if ((fd = open(LOG_FILE, O_WRONLY | O_CREAT | O_APPEND, 0666)) < 0) {
@@ -66,4 +73,10 @@ void logging(char *level, char *message, va_list args) {
     }
 
     close(fd);
+}
+
+void getCurrentTimeStr(char buffer[TIME_STR_SIZE]) {
+    time_t now = time(NULL);
+    struct tm *timeInfo = localtime(&now);
+    strftime(buffer, TIME_STR_SIZE, "%Y.%m.%d %H:%M:%S", timeInfo);
 }
