@@ -153,23 +153,25 @@ void readFileList(const char *fileName) {
     }
     buffer[bytesRead] = '\0';
 
-    char *line = strtok(buffer, "\n");
+    char **status;
+    char *line = strtok_r(buffer, "\n", status);
     while (line && blockCount < MAX_BLOCKS) {
         info("Reading line: %s", line);
         settingSWBlock(line);
-        line = strtok(buffer, "\n");
+        line = strtok_r(NULL, "\n", status);
     }
     close(fd);
 }
 
 void settingSWBlock(char *line) {
     struct SwInfo *block = &blocks[blockCount++];
-    char *token = strtok(line, ";");
+    char **status;
+    char *token = strtok_r(line, ";", status);
     strncpy(block->name, token, NAME_SIZE - 1);
 
     // i 변수를 반복문 외부에서 사용해야 하므로, for문보다 while문 코드가 더 예쁨
     int i = 0;
-    while ((token = strtok(line, ";")) != NULL && i < MAX_PARAMS) {
+    while ((token = strtok_r(NULL, ";", status)) != NULL && i < MAX_PARAMS) {
         strncpy(block->params[i++], token, PARAM_SIZE - 1);
     }
     block->paramCount = i;
