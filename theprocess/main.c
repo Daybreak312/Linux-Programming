@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include "logger.h"
 
 #define MAX_BLOCKS 10
 #define MAX_PARAMS 3
@@ -51,6 +52,8 @@ void settingSWBlock(char *line);
 // 2.1 S/W 블록 정보들을 기반으로 프로세스 초기화 및 실행
 void initializeProcesses();
 
+void initializeProcess(struct SwInfo *block);
+
 // 2.2 execv 함수 실행 시에 S/W 블록 정보를 매개변수(exev 함수의 argv)로 직렬화
 // { block->name, [block->parameters], NULL } 로 구성됨.
 void serializeArguments(char *args[PARAM_SIZE + 2], struct SwInfo *block);
@@ -69,18 +72,18 @@ void monitorProcess(struct SwInfo *block, pid_t pid);
 void daemonize();
 
 // 6.2 현재 시간을 yyyy.MM.dd. hh.mm.ss 형식으로 제공
-char *getCurrentTimeStr();
+void getCurrentTimeStr(char buffer[20]);
 
 // 7. 에러 관련 함수들
 // 7.1 에러 메세지를 출력하고 상태 '1'로 종료
 void exitErrorMessage(char *message) {
-    printf("Error: %s\n", message);
-    exit(1);
+    error(message);
+    exit(EXIT_FAILURE);
 }
 
 // 7.2 상태 '1'로 종료
 void exitError() {
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 // 메인 함수
@@ -151,28 +154,36 @@ void daemonize() {
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
+
+    char buffer[20];
+    getCurrentTimeStr(buffer);
+    info("Daemon started at %s", buffer);
 }
 
 void initializeProcesses() {
 
     for (int i = 0; i < blockCount; i++) {
-        struct SwInfo *block = &blocks[i];
-        block->startTime = time(NULL);
+        initializeProcess(&blocks[i]);
+    }
+}
 
-        pid_t pid = fork();
+void initializeProcess(struct SwInfo *block) {
+    block->startTime = time(NULL);
 
-        if (pid == 0) {
+    pid_t pid = fork();
 
-            char *args[MAX_PARAMS + 2];
-            serializeArguments(args, block);
+    if (pid == 0) {
 
-            execv(DEFAULT_PROCESS_FILE, args);
+        char *args[MAX_PARAMS + 2];
+        serializeArguments(args, block);
 
-            // exec 계열 함수가 호출 프로세스를 대체하지 못했으므로 실행 실패
-            exitErrorMessage("Fail to execute process(s/w block).");
-        } else if (pid > 0) {
-            monitorProcess(block, pid);
-        }
+        execv(DEFAULT_PROCESS_FILE, args);
+
+        error("Fail to execute process(s/w block): %s", block->name);
+        exit(EXIT_FAILURE);
+        // exec 계열 함수가 호출 프로세스를 대체하지 못했으므로 실행 실패
+    } else if (pid > 0) {
+        monitorProcess(block, pid);
     }
 }
 
@@ -196,6 +207,11 @@ void monitorProcess(struct SwInfo *block, pid_t pid) {
     } else if (WIFSIGNALED(status)) {
         sprintf(buffer, "Signal(%d, %s)", WTERMSIG(status), strsignal(WTERMSIG(status)));
         restartProcess(block, buffer);
+    } else if (WIFSTOPPED(status)) {
+        error("Process \"%s\" was stopped by Unknown reason with status: %d",
+              block->name, WSTOPSIG(status));
+        sprintf(buffer, "Unknown(%d)", WEXITSTATUS(status));
+        restartProcess(block, buffer);
     }
 }
 
@@ -204,7 +220,7 @@ void restartProcess(struct SwInfo *block, char *reasonStr) {
     strncpy(block->reason, reasonStr, REASON_SIZE - 1);
     block->reason[REASON_SIZE - 1] = '\0';
     printSWBlocksInfo();
-    initializeProcesses();
+    initializeProcess(block);
 }
 
 void printSWBlocksInfo() {
@@ -217,15 +233,17 @@ void printSWBlocksInfo() {
     char buffer[BUFFER_SIZE];
     for (int i = 0; i < blockCount; i++) {
         struct SwInfo *block = &blocks[i];
+        char time[30];
+        getCurrentTimeStr(time);
 
         // 로그 내용을 버퍼에 작성
         int len = snprintf(buffer, sizeof(buffer), "%-15s %-15d %-25s %s\n",
-                           block->name, block->restartCount, getCurrentTimeStr(), block->reason);
+                           block->name, block->restartCount, time, block->reason);
 
         // 버퍼 내용을 파일에 쓰기
         if (write(fd, buffer, len) < 0) {
             close(fd);
-            exitErrorMessage("Fail to write to log file.");
+            exitErrorMessage("Fail to write on log file.");
         }
     }
 
@@ -233,10 +251,8 @@ void printSWBlocksInfo() {
     close(fd);
 }
 
-char *getCurrentTimeStr() {
-    static char timeStr[30];
+void getCurrentTimeStr(char buffer[20]) {
     time_t now = time(NULL);
     struct tm *timeInfo = localtime(&now);
-    strftime(timeStr, sizeof(timeStr), "%Y.%m.%d %H:%M:%S", timeInfo);
-    return timeStr;
+    strftime(buffer, sizeof(buffer), "%Y.%m.%d %H:%M:%S", timeInfo);
 }
