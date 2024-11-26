@@ -16,7 +16,7 @@
 
 #define BUFFER_SIZE 1024
 
-#define DEFAULT_PROCESS_FILE "./process"
+#define DEFAULT_PROCESS_FILE "./process.out"
 #define SWBLOCKS_INFO_FILE "./swblocks.txt"
 
 struct SwInfo {
@@ -155,6 +155,7 @@ void readFileList(const char *fileName) {
 
     char *line = strtok(buffer, "\n");
     while (line && blockCount < MAX_BLOCKS) {
+        info("Reading line: %s", line);
         settingSWBlock(line);
         line = strtok(NULL, "\n");
     }
