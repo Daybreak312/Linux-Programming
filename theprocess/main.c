@@ -157,7 +157,7 @@ void readFileList(const char *fileName) {
     while (line && blockCount < MAX_BLOCKS) {
         info("Reading line: %s", line);
         settingSWBlock(line);
-        line = strtok(NULL, "\n");
+        line = strtok(buffer, "\n");
     }
     close(fd);
 }
