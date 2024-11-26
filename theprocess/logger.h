@@ -12,7 +12,7 @@
 void info(char *message, ...);
 void error(char *message, ...);
 void warn(char *message, ...);
-void log(char *level, char *message, va_list args);
+void logging(char *level, char *message, va_list args);
 
 // info 로그 함수
 void info(char *message, ...) {
