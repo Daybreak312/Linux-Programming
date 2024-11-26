@@ -315,7 +315,7 @@ void printSWBlocksInfo() {
             exitErrorMessage("Fail to write on log file.");
         }
 
-        buffer[strlen(buffer) - 1] = '\0';
+        buffer[strlen(buffer)] = '\0';
         debug(buffer);
     }
 
