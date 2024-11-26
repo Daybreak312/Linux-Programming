@@ -169,7 +169,7 @@ void settingSWBlock(char *line) {
 
     // i 변수를 반복문 외부에서 사용해야 하므로, for문보다 while문 코드가 더 예쁨
     int i = 0;
-    while ((token = strtok(NULL, ";")) != NULL && i < MAX_PARAMS) {
+    while ((token = strtok(line, ";")) != NULL && i < MAX_PARAMS) {
         strncpy(block->params[i++], token, PARAM_SIZE - 1);
     }
     block->paramCount = i;
