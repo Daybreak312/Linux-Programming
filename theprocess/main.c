@@ -340,14 +340,14 @@ void printSWBlocksInfo() {
         exitError();
     }
 
+    snprintf(buffer, BUFFER_SIZE,
+             "PID: %d, Reported time: %s\nS/W Block Name   Restart Count   Start Time            Reason\n",
+             (int) getpid(), time);
     if (write(infoFd, buffer, strlen(buffer)) < 0) {
         close(infoFd);
         error("Fail to write on info log file: %s", INFO_LOG_FILE);
         exitError();
     }
-    snprintf(buffer, BUFFER_SIZE,
-             "PID: %d, Reported time: %s\nS/W Block Name   Restart Count   Start Time            Reason\n",
-             (int) getpid(), time);
 
     for (int i = 0; i < blockCount; i++) {
         struct SwInfo *block = &blocks[i];
