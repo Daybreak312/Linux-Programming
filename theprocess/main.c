@@ -341,7 +341,7 @@ void printSWBlocksInfo() {
     }
 
     snprintf(buffer, BUFFER_SIZE,
-             "PID: %d, Reported time: %s\nS/W Block Name   Restart Count   Start Time            Reason\n",
+             "PID: %d, Reported time: %s\nS/W Block Name   PID     Restart Count   Start Time            Reason\n",
              (int) getpid(), time);
     if (write(infoFd, buffer, strlen(buffer)) < 0) {
         close(infoFd);
@@ -355,13 +355,17 @@ void printSWBlocksInfo() {
         // S/W 블록 정보를 버퍼에 작성
         snprintf(buffer, sizeof(buffer), "%-16s %-15d %-21s %s\n",
                  block->name, block->restartCount, time, block->reason);
-
         // S/W 블록 정보 출력
         if (write(restartFd, buffer, strlen(buffer)) < 0) {
             close(restartFd);
             error("Fail to write on restart log file: %s", RESTART_LOG_FILE);
             exitError();
         }
+
+        // S/W 블록 정보를 버퍼에 작성
+        snprintf(buffer, sizeof(buffer), "%-16s %-7d %-15d %-21s %s\n",
+                 block->name, block->restartCount, block->pid, time, block->reason);
+
         if (write(infoFd, buffer, strlen(buffer)) < 0) {
             close(infoFd);
             error("Fail to write on info log file: %s", INFO_LOG_FILE);
