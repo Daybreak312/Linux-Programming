@@ -363,7 +363,7 @@ void printSWBlocksInfo() {
         }
 
         // 재초기화 관련 정보를 로그에 출력 (log.txt)
-        buffer[strlen(buffer)] = '\0';
+        buffer[strlen(buffer) - 1] = '\0';
         debug(buffer);
 
         // S/W 블록 정보 출력 (info.txt)
