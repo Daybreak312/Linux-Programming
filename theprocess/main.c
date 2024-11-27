@@ -368,7 +368,7 @@ void printSWBlocksInfo() {
 
         // S/W 블록 정보 출력 (info.txt)
         snprintf(buffer, sizeof(buffer), "%-16s %-7d %-15d %-21s %s\n",
-                 block->name, block->restartCount, block->pid, time, block->reason);
+                 block->name, block->pid, block->restartCount, time, block->reason);
 
         if (write(infoFd, buffer, strlen(buffer)) < 0) {
             close(infoFd);
