@@ -19,6 +19,9 @@
 
 #define DEFAULT_PROCESS_FILE "./process.out"
 #define SWBLOCKS_INFO_FILE "./swblocks.txt"
+#define LOG_FILE "./log/log.txt"
+#define RESTART_LOG_FILE "./log/restart.txt"
+#define INFO_LOG_FILE "./log/info.txt"
 
 #define SIGNAL_STOP_SYSTEM 113
 
@@ -302,10 +305,19 @@ void restartProcess(struct SwInfo *block, char *reasonStr) {
 
 // log.txt와 restart.txt 모두에 출력됨
 void printSWBlocksInfo() {
+    // 재시작 정보를 담는 파일, 이전 로그가 저장됨
     // 쓰기 전용, 파일이 없을 경우 생성, 이어 쓰기, rw--w--w- 권한
-    int fd = open("./log/restart.txt", O_WRONLY | O_CREAT | O_APPEND, 0644);
-    if (fd < 0) {
-        exitErrorMessage("Fail to open log file.");
+    int restartFd = open(RESTART_LOG_FILE, O_WRONLY | O_CREAT | O_APPEND, 0644);
+    if (restartFd < 0) {
+        error("Fail to open restart log file: %d", RESTART_LOG_FILE);
+        exitError();
+    }
+    // 현재 S/W 블록 정보를 담는 파일, 재시작 정보와 같으나 이전 로그가 저장되지 않음
+    // 쓰기 전용, 파일이 없을 경우 생성, 이어 쓰기, rw--w--w- 권한
+    int infoFd = open("./log/info.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (infoFd < 0) {
+        error("Fail to open info log file: %d", INFO_LOG_FILE);
+        exitError();
     }
 
     // 출력 시작을 알리는 로그
@@ -319,8 +331,8 @@ void printSWBlocksInfo() {
     debug("S/W Block Name   Restart Count   Start Time            Reason");
     snprintf(buffer, BUFFER_SIZE, "%s\nS/W Block Name   Restart Count   Start Time            Reason\n",
              time);
-    if (write(fd, buffer, strlen(buffer)) < 0) {
-        close(fd);
+    if (write(restartFd, buffer, strlen(buffer)) < 0) {
+        close(restartFd);
         exitErrorMessage("Fail to write on log file.");
     }
 
@@ -332,19 +344,26 @@ void printSWBlocksInfo() {
                            block->name, block->restartCount, time, block->reason);
 
         // S/W 블록 정보 출력
-        if (write(fd, buffer, len) < 0) {
-            close(fd);
-            exitErrorMessage("Fail to write on log file.");
+        if (write(restartFd, buffer, len) < 0) {
+            close(restartFd);
+            error("Fail to write on restart log file: %s", RESTART_LOG_FILE);
+            exitError();
+        }
+        if (write(infoFd, buffer, len) < 0) {
+            close(infoFd);
+            error("Fail to write on info log file: %s", INFO_LOG_FILE);
+            exitError();
         }
 
         buffer[strlen(buffer)] = '\0';
         debug(buffer);
     }
 
-    if (write(fd, "\n\n", 2) < 0) {
+    if (write(restartFd, "\n\n", 2) < 0) {
         exitErrorMessage("Fail to write on log file.");
     }
 
     // 파일 닫기
-    close(fd);
+    close(restartFd);
+    close(infoFd);
 }
