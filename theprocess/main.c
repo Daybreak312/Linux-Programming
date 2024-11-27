@@ -134,6 +134,9 @@ int main() {
     // 프로세스들 초기화
     initializeProcesses();
 
+    // 초기 정보 출력
+    printSWBlocksInfo();
+
     // 계속 실행
     while (1) {
         sleep(1);
