@@ -349,7 +349,7 @@ void printSWBlocksInfo() {
         struct SwInfo *block = &blocks[i];
 
         // S/W 블록 정보를 버퍼에 작성
-        snprintf(buffer, sizeof(buffer), "%-16s %-15d %-21s %s",
+        snprintf(buffer, sizeof(buffer), "%-16s %-15d %-21s %s\n",
                            block->name, block->restartCount, time, block->reason);
 
         // S/W 블록 정보 출력
