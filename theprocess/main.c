@@ -336,23 +336,29 @@ void printSWBlocksInfo() {
              time);
     if (write(restartFd, buffer, strlen(buffer)) < 0) {
         close(restartFd);
-        exitErrorMessage("Fail to write on log file.");
+        error("Fail to write on restart log file: %s", RESTART_LOG_FILE);
+        exitError();
+    }
+    if (write(infoFd, buffer, strlen(buffer)) < 0) {
+        close(infoFd);
+        error("Fail to write on info log file: %s", INFO_LOG_FILE);
+        exitError();
     }
 
     for (int i = 0; i < blockCount; i++) {
         struct SwInfo *block = &blocks[i];
 
         // S/W 블록 정보를 버퍼에 작성
-        int len = snprintf(buffer, sizeof(buffer), "%-16s %-15d %-21s %s",
+        snprintf(buffer, sizeof(buffer), "%-16s %-15d %-21s %s",
                            block->name, block->restartCount, time, block->reason);
 
         // S/W 블록 정보 출력
-        if (write(restartFd, buffer, len) < 0) {
+        if (write(restartFd, buffer, strlen(buffer)) < 0) {
             close(restartFd);
             error("Fail to write on restart log file: %s", RESTART_LOG_FILE);
             exitError();
         }
-        if (write(infoFd, buffer, len) < 0) {
+        if (write(infoFd, buffer, strlen(buffer)) < 0) {
             close(infoFd);
             error("Fail to write on info log file: %s", INFO_LOG_FILE);
             exitError();
