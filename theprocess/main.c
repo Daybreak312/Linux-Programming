@@ -330,8 +330,9 @@ void printSWBlocksInfo() {
     char time[TIME_STR_SIZE];
     getCurrentTimeStr(time);
 
-    // 각 Column의 제목들 출력
+    // 각 Column의 제목들 출력 (log.txt)
     debug("S/W Block Name   Restart Count   Start Time            Reason");
+    // 각 Column의 제목들 출력 (restart.txt)
     snprintf(buffer, BUFFER_SIZE, "%s\nS/W Block Name   Restart Count   Start Time            Reason\n",
              time);
     if (write(restartFd, buffer, strlen(buffer)) < 0) {
@@ -339,7 +340,7 @@ void printSWBlocksInfo() {
         error("Fail to write on restart log file: %s", RESTART_LOG_FILE);
         exitError();
     }
-
+    // 각 Column의 제목들 출력 (info.txt)
     snprintf(buffer, BUFFER_SIZE,
              "PID: %d, Reported time: %s\nS/W Block Name   PID     Restart Count   Start Time            Reason\n",
              (int) getpid(), time);
@@ -352,17 +353,20 @@ void printSWBlocksInfo() {
     for (int i = 0; i < blockCount; i++) {
         struct SwInfo *block = &blocks[i];
 
-        // S/W 블록 정보를 버퍼에 작성
+        // S/W 블록 재초기화 정보 출력 (restart.txt)
         snprintf(buffer, sizeof(buffer), "%-16s %-15d %-21s %s\n",
                  block->name, block->restartCount, time, block->reason);
-        // S/W 블록 정보 출력
         if (write(restartFd, buffer, strlen(buffer)) < 0) {
             close(restartFd);
             error("Fail to write on restart log file: %s", RESTART_LOG_FILE);
             exitError();
         }
 
-        // S/W 블록 정보를 버퍼에 작성
+        // 재초기화 관련 정보를 로그에 출력 (log.txt)
+        buffer[strlen(buffer)] = '\0';
+        debug(buffer);
+
+        // S/W 블록 정보 출력 (info.txt)
         snprintf(buffer, sizeof(buffer), "%-16s %-7d %-15d %-21s %s\n",
                  block->name, block->restartCount, block->pid, time, block->reason);
 
@@ -371,11 +375,9 @@ void printSWBlocksInfo() {
             error("Fail to write on info log file: %s", INFO_LOG_FILE);
             exitError();
         }
-
-        buffer[strlen(buffer)] = '\0';
-        debug(buffer);
     }
 
+    // 재시작 정보는 이전 로그와 함께 저장되기에, 구분을 위해 공백 삽입
     if (write(restartFd, "\n\n", 2) < 0) {
         exitErrorMessage("Fail to write on log file.");
     }
